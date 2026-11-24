@@ -11,6 +11,7 @@ import { siteConfig } from "./_seo/site";
 export default function AboutSection() {
   return (
     <section
+      id="about"
       aria-labelledby="about-title"
       className="mx-auto w-full max-w-2xl px-6 pb-24 pt-16 text-foreground/80"
     >

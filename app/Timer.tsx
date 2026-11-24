@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import FocusInput from "./FocusInput";
 import Kbd, { HotkeysContext } from "./Kbd";
+import ScrollCue from "./ScrollCue";
 import Settings from "./Settings";
 import { setSoundEnabled } from "./sound";
 import { usePreset } from "./usePreset";
@@ -48,8 +49,18 @@ export default function Timer() {
   }, hotkeysOn);
 
   const time = formatTime(remaining);
+  // While running, show the countdown; on stop or unmount, put back the title the page had when
+  // the countdown began (the SEO title Next rendered). Capturing at start, not mount, keeps a title
+  // changed while idle intact, and the cleanup keeps StrictMode's double invoke harmless.
   useEffect(() => {
-    document.title = running ? `${time} · ${MODE_LABEL[mode]}` : "Pomoodoro";
+    if (!running) return;
+    const original = document.title;
+    return () => {
+      document.title = original;
+    };
+  }, [running]);
+  useEffect(() => {
+    if (running) document.title = `${time} · ${MODE_LABEL[mode]}`;
   }, [time, running, mode]);
 
   // Hide until saved values load so a saved 50-minute timer never flashes as 25:00.
@@ -148,6 +159,8 @@ export default function Timer() {
       </div>
 
       <FocusInput ref={focusRef} value={focus} onChange={setFocus} />
+
+      <ScrollCue targetId="about" />
 
       <Settings
         durations={durations}

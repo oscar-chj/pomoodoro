@@ -25,6 +25,9 @@ export const faqs: readonly FaqItem[] = [
     answer:
       "Your session lengths, focus note and sound and hotkey preferences are saved in your browser's local storage on your own device. Pomoodoro does not send them to a server.",
   },
+  // NOTE: this answer says the app does not work offline. Update it when a service
+  // worker / offline support is added. llms.txt, the FAQPage JSON-LD and the About
+  // section all render from this array, so one edit here updates all three.
   {
     question: "Does the timer stay accurate in a background tab?",
     answer:
