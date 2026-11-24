@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { buildPresetQuery } from "./preset";
 import { playCue, setSoundEnabled, unlockAudio } from "./sound";
 import Switch from "./Switch";
 import { MODE_LABEL, type Durations, type Mode } from "./useTimer";
@@ -36,6 +37,46 @@ function Field({ label, value, onCommit }: { label: string; value: number; onCom
         min
       </span>
     </label>
+  );
+}
+
+function CopyPresetButton({
+  durations,
+  soundOn,
+  hotkeysOn,
+}: {
+  durations: Durations;
+  soundOn: boolean;
+  hotkeysOn: boolean;
+}) {
+  const [status, setStatus] = useState<"idle" | "copied" | "failed">("idle");
+  const timer = useRef<ReturnType<typeof setTimeout>>(undefined);
+  useEffect(() => () => clearTimeout(timer.current), []);
+
+  async function copy() {
+    const query = buildPresetQuery({ durations, sound: soundOn, hotkeys: hotkeysOn });
+    let next: "copied" | "failed" = "failed";
+    try {
+      await navigator.clipboard.writeText(location.origin + location.pathname + query);
+      next = "copied";
+    } catch {
+      // clipboard unavailable or permission denied
+    }
+    setStatus(next);
+    clearTimeout(timer.current);
+    timer.current = setTimeout(() => setStatus("idle"), 1500);
+  }
+
+  return (
+    <div aria-live="polite" className="flex flex-col">
+      <button
+        type="button"
+        onClick={copy}
+        className="inline-flex h-11 items-center justify-center rounded-xl bg-foreground/5 px-3 text-sm text-foreground/70 transition hover:bg-foreground/10 hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-foreground motion-safe:active:scale-95"
+      >
+        {status === "copied" ? "Copied" : status === "failed" ? "Copy failed" : "Copy preset link"}
+      </button>
+    </div>
   );
 }
 
@@ -92,6 +133,7 @@ export default function Settings({
             }}
           />
           <Switch label="Hotkeys" checked={hotkeysOn} onChange={onHotkeysChange} />
+          <CopyPresetButton durations={durations} soundOn={soundOn} hotkeysOn={hotkeysOn} />
         </div>
       </div>
     </>

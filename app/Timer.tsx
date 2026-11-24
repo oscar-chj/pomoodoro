@@ -5,6 +5,7 @@ import FocusInput from "./FocusInput";
 import Kbd, { HotkeysContext } from "./Kbd";
 import Settings from "./Settings";
 import { setSoundEnabled } from "./sound";
+import { usePreset } from "./usePreset";
 import { useHotkeys } from "./useHotkeys";
 import { useStoredState } from "./useStoredState";
 import {
@@ -24,7 +25,7 @@ export default function Timer() {
     DEFAULT_DURATIONS,
   );
   const [focus, setFocus, focusReady] = useStoredState("pomoodoro.focus", "");
-  const [soundOn, setSoundOn] = useStoredState("pomoodoro.sound", true);
+  const [soundOn, setSoundOn, soundReady] = useStoredState("pomoodoro.sound", true);
   const [hotkeysOn, setHotkeysOn, hotkeysReady] = useStoredState("pomoodoro.hotkeys", true);
   const { mode, remaining, running, stageSeq, finishSeq, toggle, reset, setMode } = useTimer(durations);
   // Icon swap animates only after the first toggle, never on load.
@@ -53,6 +54,14 @@ export default function Timer() {
 
   // Hide until saved values load so a saved 50-minute timer never flashes as 25:00.
   const ready = durationsReady && focusReady && hotkeysReady;
+
+  // Each hook's load and ready flip land in one render, so once all are ready the saved values are
+  // in state; the preset then goes through the normal setters and is persisted like any edit.
+  usePreset(ready && soundReady, (p) => {
+    if (p.durations) setDurations((d) => ({ ...d, ...p.durations }));
+    if (p.sound !== undefined) setSoundOn(p.sound);
+    if (p.hotkeys !== undefined) setHotkeysOn(p.hotkeys);
+  });
 
   return (
     <HotkeysContext value={hotkeysOn}>
